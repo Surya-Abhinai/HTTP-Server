@@ -2,8 +2,9 @@ import socket
 import re
 import threading
 import os
+import sys
 
-def handle(conn,addr) :
+def handle(conn,dir) :
     while True:
         data = conn.recv(2048).decode()
         if data:
@@ -37,11 +38,12 @@ def handle(conn,addr) :
 
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    # pattern = r'/echo/(.*)'
-    # echo = re.compile(pattern)
     while True:
         conn, addr = server_socket.accept()  # wait for client
-        client_handler = threading.Thread(target=handle, args= (conn , addr))
+        dir = None
+        if len(sys.argv) > 1:
+            dir = sys.argv[2]
+        client_handler = threading.Thread(target=handle, args= (conn , dir))
         client_handler.start()
 
 
