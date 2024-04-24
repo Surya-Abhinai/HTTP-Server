@@ -3,10 +3,11 @@ import re
 
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    conn, addr = server_socket.accept() # wait for client
     # pattern = r'/echo/(.*)'
     # echo = re.compile(pattern)
     while True:
+        conn, addr = server_socket.accept()  # wait for client
+
         data = conn.recv(2048).decode()
         if data:
             data = data.split("\r\n")
