@@ -3,24 +3,27 @@ import threading
 import os
 import sys
 
+
 def handle_client(client_socket, dir):
     while True:
         data = client_socket.recv(4096).decode()
         if not data:
             break
-        data_list = data.split("\r\n")
+        headers,body = data.split("\r\n\r\n")
+        data_list = headers.split("\r\n")
         path = data_list[0].split(" ")[1]
-        if str(path) == "/":
+        method = data_list[0].split(" ")[0]
+        if method == "GET" and str(path) == "/":
             client_socket.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-        elif "/echo/" in str(path):
+        elif method == "GET" and "/echo/" in str(path):
             msg = path.split("/echo/")[-1]
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(msg)}\r\n\r\n{msg}"
             client_socket.sendall(response.encode())
-        elif str(path) == "/user-agent":
+        elif method == "GET" and str(path) == "/user-agent":
             user_info = data_list[2].split(" ")[-1]
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_info)}\r\n\r\n{user_info}"
             client_socket.sendall(response.encode())
-        elif "/files/" in str(path):
+        elif method == "GET" and "/files/" in str(path):
             filename = path.split("/files/")[-1]
             file_path = dir + "/" + filename
             if os.path.exists(file_path):
@@ -34,12 +37,27 @@ def handle_client(client_socket, dir):
                 client_socket.sendall(
                     b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
                 )
+        elif method == "POST" and "/files/" in str(path):
+            filename = path.split("/files/")[-1]
+            file_path = dir + "/" + filename
+            if os.path.exists(dir):
+                with open(file_path, "w") as f:
+                    f.write(str(body))
+                client_socket.sendall(
+                    b"HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n"
+                )
+            else:
+                client_socket.sendall(
+                    b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
+                )
         else:
             client_socket.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
             client_socket.sendall(
                 b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
             )
     client_socket.close()
+
+
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
     while True:
@@ -63,5 +81,6 @@ def main():
                 ),
             )
         client_handler.start()
+
 if __name__ == "__main__":
     main()
