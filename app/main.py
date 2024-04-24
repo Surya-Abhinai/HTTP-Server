@@ -1,16 +1,16 @@
 import socket
-import re
 import threading
 import os
 import sys
 
-def handle(conn,dir) :
+
+def handle(conn,dir):
     while True:
         data = conn.recv(2048).decode()
         if data:
             data = data.split("\r\n")
             method, path, version = data[0].split(" ")
-            # match = echo.search(path)
+
             if path == '/':
                 conn.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
             elif path.startswith("/echo/"):
@@ -36,14 +36,15 @@ def handle(conn,dir) :
             else:
                 conn.sendall(b"HTTP/1.1 404 NOT FOUND\r\n\r\n")
 
+
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     while True:
         conn, addr = server_socket.accept()  # wait for client
-        dir = None
+        dire = None
         if len(sys.argv) > 1:
-            dir = sys.argv[2]
-        client_handler = threading.Thread(target=handle, args= (conn , dir))
+            dire = sys.argv[2]
+        client_handler = threading.Thread(target=handle, args=(conn, dire))
         client_handler.start()
 
 
