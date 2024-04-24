@@ -1,6 +1,7 @@
 import socket
 import re
 import threading
+import os
 
 def handle(conn,addr) :
     while True:
@@ -19,6 +20,18 @@ def handle(conn,addr) :
                 text = data[2].split("User-Agent: ")[-1]
                 output = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}\r\n"
                 conn.sendall(output.encode())
+
+            elif path.startswith("/files/"):
+                filename = path.split("/files/")[-1]
+                file_path = dir + "/" + filename
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        data = f.read()
+                        response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(data)}\r\n\r\n"
+                        conn.sendall(response.encode())
+                        conn.sendall(data)
+                else:
+                    conn.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
             else:
                 conn.sendall(b"HTTP/1.1 404 NOT FOUND\r\n\r\n")
 
