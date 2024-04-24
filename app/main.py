@@ -1,17 +1,13 @@
 import socket
 import re
+import threading
 
-def main():
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    # pattern = r'/echo/(.*)'
-    # echo = re.compile(pattern)
+def handle(conn,addr) :
     while True:
-        conn, addr = server_socket.accept()  # wait for client
-
         data = conn.recv(2048).decode()
         if data:
             data = data.split("\r\n")
-            method,path,version = data[0].split(" ")
+            method, path, version = data[0].split(" ")
             # match = echo.search(path)
             if path == '/':
                 conn.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
@@ -25,6 +21,16 @@ def main():
                 conn.sendall(output.encode())
             else:
                 conn.sendall(b"HTTP/1.1 404 NOT FOUND\r\n\r\n")
+
+def main():
+    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
+    # pattern = r'/echo/(.*)'
+    # echo = re.compile(pattern)
+    while True:
+        conn, addr = server_socket.accept()  # wait for client
+        client_handler = threading.Thread(target=handle, args= (conn , addr))
+        client_handler.start()
+
 
 
 if __name__ == "__main__":
