@@ -18,6 +18,10 @@ def main():
                 text = path.split("/echo/")[-1]
                 output = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}\r\n"
                 conn.sendall(output.encode())
+            elif path == "/user-agent":
+                text = data[2].split("User-Agent: ")[-1]
+                output = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}\r\n"
+                conn.sendall(output.encode())
             else:
                 conn.sendall(b"HTTP/1.1 404 NOT FOUND\r\n\r\n")
 
